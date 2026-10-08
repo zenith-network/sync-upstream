@@ -1,0 +1,5 @@
+[default]
+git = { url = "https://github.com/protocolbuffers/protobuf.git", tag = "v36.0" }
+
+[capsules]
+benches = { dst = "vendored_benchmarks", src = "benchmarks", filter = "**/*.proto" }

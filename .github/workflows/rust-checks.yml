@@ -1,0 +1,100 @@
+# This workflow is managed by gh actions-lock.
+
+name: Rust Checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+jobs:
+  format:
+    name: Check formatting
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.4.0
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: "1.99.0"
+          default: true
+          components: rustfmt
+      - name: Use Rust cache
+        uses: Swatinem/rust-cache@v2.9.2
+      - name: Check formatting
+        run: |
+          cargo fmt --check --verbose
+
+  lint:
+    name: Run linting
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.4.0
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: "1.99.0"
+          default: true
+          components: clippy
+      - name: Use Rust cache
+        uses: Swatinem/rust-cache@v2.9.2
+      - name: Run linting
+        run: |
+          cargo clippy --no-deps --all-targets --all-features --locked --verbose -- --deny warnings
+
+  check-build:
+    name: Check build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.4.0
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: "1.99.0"
+          default: true
+      - name: Use Rust cache
+        uses: Swatinem/rust-cache@v2.9.2
+      - name: Run build check
+        run: |
+          cargo check --all-targets --all-features --locked --verbose
+
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.4.0
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: "1.99.0"
+          default: true
+      - name: Use Rust cache
+        uses: Swatinem/rust-cache@v2.9.2
+      - name: Run tests
+        run: |
+          cargo test --locked --all-features --verbose
+
+  check-toml-format:
+    name: Run Toml Format
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4.4.0
+
+      - uses: uncenter/setup-taplo@v1.0.8
+        with:
+          version: "0.9.3"
+
+      - name: taplo fmt check
+        shell: bash
+        run: |
+          taplo fmt --check
+          taplo check

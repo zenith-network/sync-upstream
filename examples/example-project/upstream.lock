@@ -1,0 +1,6 @@
+[[capsule]]
+name = "benches"
+source = "git+https://github.com/protocolbuffers/protobuf.git?ref=v36.0&rev=3f17acbf7ffbda81db8be17505554c726e558bb2"
+src = "benchmarks"
+dst = "vendored_benchmarks"
+filter = "**/*.proto"
