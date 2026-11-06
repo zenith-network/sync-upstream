@@ -12,8 +12,14 @@ pub fn print_stats(capsules: &[ResolvedCapsule<'_>], config: &Config) {
         let capsule_dst = capsule.spec.dst().display();
 
         let summary = capsule.changeset.summary();
-        // Skip capsules with no changes
-        if summary.is_unchanged() && !config.verbose {
+        // Empty files can change without adding or deleting any lines.
+        if !config.verbose
+            && capsule
+                .changeset
+                .changes()
+                .values()
+                .all(Change::is_unchanged)
+        {
             continue;
         }
 
