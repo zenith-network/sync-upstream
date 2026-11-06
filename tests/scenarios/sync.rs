@@ -237,7 +237,6 @@ fn overwrite_allows_writes(#[case] git_workspace: bool) {
 #[rstest]
 #[case::addition(false, "empty.proto [add]")]
 #[case::deletion(true, "empty.proto [delete]")]
-#[ignore = "low priority bug, tracked"]
 fn empty_file_changes_are_reported(#[case] deletion: bool, #[case] expected: &str) {
     let fixture = Fixture::new();
     fs::create_dir(fixture.upstream.join("schemas")).unwrap();
@@ -247,12 +246,33 @@ fn empty_file_changes_are_reported(#[case] deletion: bool, #[case] expected: &st
         write(&fixture.upstream, "schemas/empty.proto", "");
     }
     fixture.path_manifest("schemas = { src = 'schemas', dst = 'vendor' }");
+    let before = file_tree(&fixture.workspace);
 
     let output = fixture.run(&["--all", "--dry-run", "--no-cache"]);
     output.success();
 
     assert!(output.stdout.contains(expected), "{}", output.stdout);
     assert!(!output.stdout.contains("Up to date"), "{}", output.stdout);
+    assert_eq!(file_tree(&fixture.workspace), before);
+    assert!(!fixture.workspace.join("upstream.lock").exists());
+}
+
+#[test]
+fn unchanged_empty_file_is_up_to_date() {
+    let fixture = Fixture::new();
+    write(&fixture.upstream, "schemas/empty.proto", "");
+    fixture.path_manifest("schemas = { src = 'schemas', dst = 'vendor' }");
+    fixture
+        .run(&["--all", "--overwrite", "--no-cache"])
+        .success();
+    let before = file_tree(&fixture.workspace);
+
+    let output = fixture.run(&["--all", "--dry-run", "--no-cache"]);
+    output.success();
+
+    assert!(output.stdout.contains("Up to date"), "{}", output.stdout);
+    assert!(!output.stdout.contains("empty.proto"), "{}", output.stdout);
+    assert_eq!(file_tree(&fixture.workspace), before);
 }
 
 /// A managed path can transition between a regular file and a populated directory.
